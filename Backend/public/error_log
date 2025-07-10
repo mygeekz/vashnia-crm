@@ -1,0 +1,11 @@
+[09-Jul-2025 09:50:05 UTC] PHP Warning:  require(/home/vashnia1/crm.vashnia.com/backend/app/vendor/autoload.php): Failed to open stream: No such file or directory in /home/vashnia1/crm.vashnia.com/backend/app/Controllers/AuthController.php on line 2
+[09-Jul-2025 09:50:05 UTC] PHP Warning:  require(/home/vashnia1/crm.vashnia.com/backend/app/vendor/autoload.php): Failed to open stream: No such file or directory in /home/vashnia1/crm.vashnia.com/backend/app/Controllers/AuthController.php on line 2
+[09-Jul-2025 09:50:05 UTC] PHP Fatal error:  Uncaught Error: Failed opening required '/home/vashnia1/crm.vashnia.com/backend/app/vendor/autoload.php' (include_path='.:/opt/cpanel/ea-php83/root/usr/share/pear') in /home/vashnia1/crm.vashnia.com/backend/app/Controllers/AuthController.php:2
+Stack trace:
+#0 /home/vashnia1/crm.vashnia.com/backend/vendor/composer/ClassLoader.php(576): include()
+#1 /home/vashnia1/crm.vashnia.com/backend/vendor/composer/ClassLoader.php(427): Composer\Autoload\{closure}('/home/vashnia1/...')
+#2 /home/vashnia1/crm.vashnia.com/backend/app/Core/Router.php(39): Composer\Autoload\ClassLoader->loadClass('App\\Controllers...')
+#3 /home/vashnia1/crm.vashnia.com/backend/app/Core/Router.php(24): App\Core\Router->run(Array, Array)
+#4 /home/vashnia1/crm.vashnia.com/backend/public/index.php(46): App\Core\Router->dispatch('POST', '/api/login')
+#5 {main}
+  thrown in /home/vashnia1/crm.vashnia.com/backend/app/Controllers/AuthController.php on line 2

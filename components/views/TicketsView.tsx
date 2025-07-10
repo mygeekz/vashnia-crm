@@ -1,64 +1,79 @@
-
-import React, { useState } from 'react';
-import { MOCK_TICKETS } from '../../constants';
-import { Ticket, TicketStatus } from '../../types';
+import React, { useState, useEffect } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
 import { GlassCard } from '../ui/GlassCard';
-import { GlassTable, GlassTableRow, GlassTableCell } from '../ui/GlassTable';
-import { PlusIcon } from '../../assets/icons';
-import { motion } from 'framer-motion';
+import { GlassTable, GlassTableCell } from '../ui/GlassTable';
+import { Ticket, TicketStatus } from '../../types';
+import { SearchIcon } from '../../assets/icons';
 
+const API_BASE = '/api';
 
 export const TicketsView: React.FC = () => {
-    const [tickets] = useState<Ticket[]>(MOCK_TICKETS);
+  const [tickets, setTickets] = useState<Ticket[]>([]);
+  const [search, setSearch] = useState('');
 
-    const getStatusColor = (status: TicketStatus) => {
-        switch (status) {
-          case TicketStatus.Open:
-            return 'bg-green-500/20 text-green-300';
-          case TicketStatus.InProgress:
-            return 'bg-yellow-500/20 text-yellow-300';
-          case TicketStatus.Closed:
-            return 'bg-red-500/20 text-red-300';
-          default:
-            return 'bg-gray-500/20 text-gray-300';
-        }
-      };
+  useEffect(() => {
+    fetch(`${API_BASE}/tickets`)
+      .then(r => r.json())
+      .then(setTickets)
+      .catch(console.error);
+  }, []);
 
-    return (
-        <div>
-            <div className="flex justify-between items-center mb-6">
-                <h1 className="text-3xl font-bold text-white">تیکت‌ها</h1>
-                 <motion.button whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }} className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-white bg-green-600 border border-transparent rounded-lg hover:bg-green-700 transition-all">
-                    <PlusIcon className="w-5 h-5" />
-                    تیکت جدید
-                </motion.button>
-            </div>
-            
-            <GlassCard>
-                <div className="flex justify-end mb-4">
-                    <select className="p-2 bg-white/10 rounded-md border border-white/20 focus:ring-green-500 focus:border-green-500 text-white text-sm">
-                        <option className="bg-gray-800" value="">فیلتر بر اساس دپارتمان</option>
-                        <option className="bg-gray-800" value="فنی">فنی</option>
-                        <option className="bg-gray-800" value="فروش">فروش</option>
-                        <option className="bg-gray-800" value="مالی">مالی</option>
-                    </select>
-                </div>
-                <GlassTable headers={['کد تیکت', 'عنوان', 'دپارتمان', 'وضعیت', 'آخرین بروزرسانی']}>
-                    {tickets.map(ticket => (
-                        <GlassTableRow key={ticket.id}>
-                            <GlassTableCell className="font-mono">{ticket.id}</GlassTableCell>
-                            <GlassTableCell className="font-medium text-white">{ticket.title}</GlassTableCell>
-                            <GlassTableCell>{ticket.department}</GlassTableCell>
-                            <GlassTableCell>
-                                <span className={`px-2 py-1 text-xs rounded-full ${getStatusColor(ticket.status)}`}>
-                                    {ticket.status}
-                                </span>
-                            </GlassTableCell>
-                            <GlassTableCell>{ticket.lastUpdate}</GlassTableCell>
-                        </GlassTableRow>
-                    ))}
-                </GlassTable>
-            </GlassCard>
+  const filtered = tickets.filter(t =>
+    (t.title + t.id + t.department)
+      .toLowerCase()
+      .includes(search.toLowerCase())
+  );
+
+  return (
+    <div>
+      <h1 className="text-3xl font-bold mb-6 text-white">سیستم تیکت‌ها</h1>
+
+      <GlassCard>
+        <div className="flex justify-between items-center mb-4">
+          <div className="relative w-full max-w-sm">
+            <input
+              className="w-full p-2 pr-10 bg-white/10 rounded-md border border-white/20 focus:ring-green-500 focus:border-green-500"
+              placeholder="جستجوی تیکت…"
+              value={search}
+              onChange={e => setSearch(e.target.value)}
+            />
+            <SearchIcon className="absolute right-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+          </div>
         </div>
-    );
+
+        <GlassTable headers={['کد', 'عنوان', 'دپارتمان', 'وضعیت', 'آخرین بروزرسانی']}>
+          <AnimatePresence>
+            {filtered.map(t => (
+              <motion.tr
+                key={t.id}
+                layout
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                className="bg-white/5 border-b border-white/10"
+              >
+                <GlassTableCell className="font-mono">{t.id}</GlassTableCell>
+                <GlassTableCell>{t.title}</GlassTableCell>
+                <GlassTableCell>{t.department}</GlassTableCell>
+                <GlassTableCell>
+                  <span
+                    className={`px-2 py-1 text-xs rounded-full ${
+                      t.status === TicketStatus.Closed
+                        ? 'bg-green-500/20 text-green-300'
+                        : t.status === TicketStatus.InProgress
+                        ? 'bg-yellow-500/20 text-yellow-300'
+                        : 'bg-red-500/20 text-red-300'
+                    }`}
+                  >
+                    {t.status}
+                  </span>
+                </GlassTableCell>
+                <GlassTableCell>{t.lastUpdate}</GlassTableCell>
+              </motion.tr>
+            ))}
+          </AnimatePresence>
+        </GlassTable>
+      </GlassCard>
+    </div>
+  );
 };

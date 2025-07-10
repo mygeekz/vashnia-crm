@@ -1,0 +1,32 @@
+# روشن کردن mod_rewrite
+RewriteEngine On
+
+# مسیر ریشه پروژه را به دایرکتوری فعلی محدود می‌کند
+RewriteBase /
+
+# جلوگیری از دسترسی به فایل‌های حساس (مانند .env، composer.json، .htaccess و ...)
+<FilesMatch "(\.(env|ini|log|bak|sql|sh|htaccess|htpasswd|git|json|lock)|composer\.(json|lock))$">
+  Order allow,deny
+  Deny from all
+</FilesMatch>
+
+# جلوگیری از مرور دایرکتوری‌ها
+Options -Indexes
+
+# تنظیم CORS برای APIها (اختیاری، بسته به نیاز)
+<IfModule mod_headers.c>
+  Header always set Access-Control-Allow-Origin "*"
+  Header always set Access-Control-Allow-Methods "GET, POST, PUT, DELETE, OPTIONS"
+  Header always set Access-Control-Allow-Headers "Authorization, Content-Type"
+</IfModule>
+
+# جلوگیری از ذخیره کش فایل‌های متنی (اختیاری)
+<IfModule mod_expires.c>
+  ExpiresActive On
+  ExpiresByType application/json "access plus 0 seconds"
+</IfModule>
+
+# اگر فایل یا دایرکتوری واقعی نبود، درخواست را به index.php بفرست
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteCond %{REQUEST_FILENAME} !-d
+RewriteRule ^ index.php [QSA,L]

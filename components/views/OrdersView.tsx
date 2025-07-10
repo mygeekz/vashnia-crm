@@ -1,53 +1,77 @@
-
-import React, { useState } from 'react';
-import { motion } from 'framer-motion';
-import { MOCK_ORDERS } from '../../constants';
+import React, { useState, useEffect } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
 import { Order, OrderStatus } from '../../types';
 import { GlassCard } from '../ui/GlassCard';
-import { GlassTable, GlassTableRow, GlassTableCell } from '../ui/GlassTable';
+import { GlassTable, GlassTableCell } from '../ui/GlassTable';
 import { SearchIcon } from '../../assets/icons';
 
-export const OrdersView: React.FC = () => {
-  const [orders] = useState<Order[]>(MOCK_ORDERS);
+const API_BASE = '/api';
 
-  const getStatusColor = (status: OrderStatus) => {
-    switch (status) {
-      case OrderStatus.New:
-        return 'bg-blue-500/20 text-blue-300';
-      case OrderStatus.Confirmed:
-        return 'bg-yellow-500/20 text-yellow-300';
-      case OrderStatus.Shipped:
-        return 'bg-green-500/20 text-green-300';
-      default:
-        return 'bg-gray-500/20 text-gray-300';
-    }
-  };
+export const OrdersView: React.FC = () => {
+  const [orders, setOrders] = useState<Order[]>([]);
+  const [search, setSearch] = useState('');
+
+  /* دریافت فهرست سفارش‌ها */
+  useEffect(() => {
+    fetch(`${API_BASE}/orders`)
+      .then(r => r.json())
+      .then(setOrders)
+      .catch(console.error);
+  }, []);
+
+  const filtered = orders.filter(o =>
+    (o.customerName + o.id)
+      .toLowerCase()
+      .includes(search.toLowerCase())
+  );
 
   return (
     <div>
-      <div className="flex justify-between items-center mb-6">
-        <h1 className="text-3xl font-bold text-white">مدیریت سفارش‌ها</h1>
-      </div>
-      
+      <h1 className="text-3xl font-bold mb-6 text-white">مدیریت سفارش‌ها</h1>
+
       <GlassCard>
-        <GlassTable headers={['شماره سفارش', 'نام شعبه/مشتری', 'تاریخ ثبت', 'وضعیت', 'جزئیات']}>
-          {orders.map(order => (
-            <GlassTableRow key={order.id}>
-              <GlassTableCell className="font-mono">{order.id}</GlassTableCell>
-              <GlassTableCell className="font-medium text-white">{order.customerName}</GlassTableCell>
-              <GlassTableCell>{order.date}</GlassTableCell>
-              <GlassTableCell>
-                <span className={`px-2 py-1 text-xs rounded-full ${getStatusColor(order.status)}`}>
-                  {order.status}
-                </span>
-              </GlassTableCell>
-              <GlassTableCell>
-                <motion.button whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }} className="px-3 py-1 text-sm rounded-md bg-white/10 hover:bg-white/20 transition-colors">
-                  مشاهده
-                </motion.button>
-              </GlassTableCell>
-            </GlassTableRow>
-          ))}
+        <div className="flex justify-between items-center mb-4">
+          <div className="relative w-full max-w-sm">
+            <input
+              className="w-full p-2 pr-10 bg-white/10 rounded-md border border-white/20 focus:ring-green-500 focus:border-green-500"
+              placeholder="جستجو در سفارش‌ها…"
+              value={search}
+              onChange={e => setSearch(e.target.value)}
+            />
+            <SearchIcon className="absolute right-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+          </div>
+        </div>
+
+        <GlassTable headers={['کد سفارش', 'مشتری/شعبه', 'تاریخ', 'وضعیت']}>
+          <AnimatePresence>
+            {filtered.map(o => (
+              <motion.tr
+                key={o.id}
+                layout
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                className="bg-white/5 border-b border-white/10"
+              >
+                <GlassTableCell className="font-mono">{o.id}</GlassTableCell>
+                <GlassTableCell>{o.customerName}</GlassTableCell>
+                <GlassTableCell>{o.date}</GlassTableCell>
+                <GlassTableCell>
+                  <span
+                    className={`px-2 py-1 text-xs rounded-full ${
+                      o.status === OrderStatus.Delivered
+                        ? 'bg-green-500/20 text-green-300'
+                        : o.status === OrderStatus.Shipped
+                        ? 'bg-yellow-500/20 text-yellow-300'
+                        : 'bg-blue-500/20 text-blue-300'
+                    }`}
+                  >
+                    {o.status}
+                  </span>
+                </GlassTableCell>
+              </motion.tr>
+            ))}
+          </AnimatePresence>
         </GlassTable>
       </GlassCard>
     </div>

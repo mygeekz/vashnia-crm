@@ -1,34 +1,54 @@
-
-import React, { useState } from 'react';
-import { motion } from 'framer-motion';
-import { MOCK_CUSTOMERS } from '../../constants';
-import { Customer } from '../../types';
+import React, { useState, useEffect } from 'react';
 import { GlassCard } from '../ui/GlassCard';
-import { GlassTable, GlassTableRow, GlassTableCell } from '../ui/GlassTable';
-import { PlusIcon } from '../../assets/icons';
+import { GlassTable, GlassTableCell } from '../ui/GlassTable';
+import { Customer } from '../../types';
+import { SearchIcon } from '../../assets/icons';
+
+const API_BASE = '/api';
 
 export const CustomersView: React.FC = () => {
-  const [customers] = useState<Customer[]>(MOCK_CUSTOMERS);
+  const [customers, setCustomers] = useState<Customer[]>([]);
+  const [search, setSearch] = useState('');
+
+  useEffect(() => {
+    fetch(`${API_BASE}/clients`)
+      .then(r => r.json())
+      .then(setCustomers)
+      .catch(console.error);
+  }, []);
+
+  const filtered = customers.filter(c =>
+    (c.name + c.phone + c.id)
+      .toLowerCase()
+      .includes(search.toLowerCase())
+  );
 
   return (
     <div>
-      <div className="flex justify-between items-center mb-6">
-        <h1 className="text-3xl font-bold text-white">مدیریت شعبات و مشتریان</h1>
-        <motion.button whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }} className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-white bg-green-600 border border-transparent rounded-lg hover:bg-green-700 transition-all">
-          <PlusIcon className="w-5 h-5" />
-          افزودن مشتری/شعبه
-        </motion.button>
-      </div>
-      
+      <h1 className="text-3xl font-bold mb-6 text-white">مشتریان و شعبات</h1>
+
       <GlassCard>
-        <GlassTable headers={['نام', 'شماره تماس', 'آدرس', 'تاریخ عضویت']}>
-          {customers.map(customer => (
-            <GlassTableRow key={customer.id}>
-              <GlassTableCell className="font-medium text-white">{customer.name}</GlassTableCell>
-              <GlassTableCell className="font-mono text-left" dir="ltr">{customer.phone}</GlassTableCell>
-              <GlassTableCell>{customer.address}</GlassTableCell>
-              <GlassTableCell>{customer.joinDate}</GlassTableCell>
-            </GlassTableRow>
+        <div className="flex justify-between items-center mb-4">
+          <div className="relative w-full max-w-sm">
+            <input
+              className="w-full p-2 pr-10 bg-white/10 rounded-md border border-white/20 focus:ring-green-500 focus:border-green-500"
+              placeholder="جستجو…"
+              value={search}
+              onChange={e => setSearch(e.target.value)}
+            />
+            <SearchIcon className="absolute right-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+          </div>
+        </div>
+
+        <GlassTable headers={['کد', 'نام', 'تلفن', 'آدرس', 'تاریخ عضویت']}>
+          {filtered.map(c => (
+            <tr key={c.id} className="bg-white/5 border-b border-white/10">
+              <GlassTableCell className="font-mono">{c.id}</GlassTableCell>
+              <GlassTableCell>{c.name}</GlassTableCell>
+              <GlassTableCell>{c.phone}</GlassTableCell>
+              <GlassTableCell>{c.address}</GlassTableCell>
+              <GlassTableCell>{c.joinDate}</GlassTableCell>
+            </tr>
           ))}
         </GlassTable>
       </GlassCard>
